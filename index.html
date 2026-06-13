@@ -36,14 +36,12 @@
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            /* Soporte avanzado para barras de navegación móviles */
             min-height: -webkit-fill-available; 
         }
 
         .app-container {
             width: 100%;
             max-width: 450px;
-            /* Cambiado a min-height con padding inferior dinámico para evitar cortes */
             min-height: 100vh;
             min-height: -webkit-fill-available;
             display: flex;
@@ -57,6 +55,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            width: 100%;
         }
 
         header button, .quick-actions button {
@@ -74,6 +73,7 @@
             justify-content: space-between;
             gap: 8px;
             margin-bottom: 16px;
+            width: 100%;
         }
 
         .quick-actions button {
@@ -83,12 +83,21 @@
             background: #1e293b4d;
         }
 
-        /* Corregido el centrado expandiendo las columnas equitativamente */
+        /* Contenedor forzado para aislar el grid de los márgenes laterales externos */
+        .calendar-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Rejillas simétricas con justificación forzada al centro exacto */
         .calendar-grid-header, .calendar-days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            gap: 6px;
             width: 100%;
+            justify-content: space-between;
+            justify-items: stretch;
         }
 
         .calendar-grid-header {
@@ -110,7 +119,7 @@
             padding: 6px;
             cursor: pointer;
             transition: transform 0.1s;
-            width: 100%; /* Fuerza al elemento a ocupar su celda entera */
+            width: 100%;
         }
 
         .day-cell:active {
@@ -149,10 +158,11 @@
 
         footer {
             margin-top: auto;
-            padding-top: 24px; /* Más espacio de seguridad */
+            padding-top: 24px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            width: 100%;
         }
 
         .total-container {
@@ -165,6 +175,7 @@
             align-items: center;
             font-size: 1.2rem;
             font-weight: bold;
+            width: 100%;
         }
 
         #total-salary {
@@ -185,7 +196,7 @@
             align-items: center;
             gap: 8px;
             width: 100%;
-            margin-bottom: 8px; /* Margen extra de seguridad inferior */
+            margin-bottom: 8px;
         }
 
         .share-btn:active {
@@ -285,12 +296,14 @@
             <input type="file" id="file-input" accept=".json">
         </div>
 
-        <main>
-            <div class="calendar-grid-header">
-                <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-            </div>
-            <div id="calendar-days" class="calendar-days-grid"></div>
-        </main>
+        <div class="calendar-container">
+            <main>
+                <div class="calendar-grid-header">
+                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                </div>
+                <div id="calendar-days" class="calendar-days-grid"></div>
+            </main>
+        </div>
 
         <footer>
             <div class="total-container">
