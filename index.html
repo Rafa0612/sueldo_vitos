@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control de Sueldo Diario</title>
     
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 13h-2v2H9v-2H7v-2h2v-2H7V9h2V7h2v2h2v2h-2v2h2v2z'/></svg>%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
@@ -18,7 +18,7 @@
             --primary: #3b82f6;
             --accent: #10b981;
             --border: #334155;
-            --worked-bg: #064e3b; /* Fondo verde oscuro para días trabajados */
+            --worked-bg: #064e3b;
         }
 
         * {
@@ -34,18 +34,22 @@
             color: var(--text-color);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
+            /* Soporte avanzado para barras de navegación móviles */
+            min-height: -webkit-fill-available; 
         }
 
         .app-container {
             width: 100%;
             max-width: 450px;
-            height: 100vh;
+            /* Cambiado a min-height con padding inferior dinámico para evitar cortes */
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
             background: var(--bg-color);
-            padding: 16px;
+            padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
         }
 
         header {
@@ -79,10 +83,12 @@
             background: #1e293b4d;
         }
 
+        /* Corregido el centrado expandiendo las columnas equitativamente */
         .calendar-grid-header, .calendar-days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
+            width: 100%;
         }
 
         .calendar-grid-header {
@@ -104,6 +110,7 @@
             padding: 6px;
             cursor: pointer;
             transition: transform 0.1s;
+            width: 100%; /* Fuerza al elemento a ocupar su celda entera */
         }
 
         .day-cell:active {
@@ -130,7 +137,6 @@
             font-weight: 500;
         }
 
-        /* Resaltado de días trabajados */
         .day-cell.worked {
             background: var(--worked-bg);
             border-color: var(--accent);
@@ -143,7 +149,7 @@
 
         footer {
             margin-top: auto;
-            padding-top: 16px;
+            padding-top: 24px; /* Más espacio de seguridad */
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -179,6 +185,7 @@
             align-items: center;
             gap: 8px;
             width: 100%;
+            margin-bottom: 8px; /* Margen extra de seguridad inferior */
         }
 
         .share-btn:active {
@@ -255,7 +262,7 @@
         }
 
         #cancel-btn { background: #475569; color: white; }
-        #delete-btn { background: #b91c1c; color: white; display: none; } /* Botón borrar dinámico */
+        #delete-btn { background: #b91c1c; color: white; display: none; }
         #save-btn { background: var(--primary); color: white; }
         
         #file-input { display: none; }
@@ -358,7 +365,6 @@
                 const amount = salariesData[dateKey] ? parseFloat(salariesData[dateKey]) : 0;
                 monthlyTotal += amount;
 
-                // Si tiene importe guardado, añadimos la clase visual worked
                 if (amount > 0) {
                     dayCell.classList.add('worked');
                 }
@@ -388,7 +394,6 @@
             
             salaryInput.setAttribute('readonly', 'true');
             
-            // Lógica corregida: Solo Viernes (5) y Sábado (6) son fin de semana. Domingo (0) vuelve a ser de diario.
             const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
             currentTargetRate = isWeekend ? parseFloat(weekendSalary) : parseFloat(weekdaySalary);
             const rateLabel = isWeekend ? "Finde" : "Semana";
@@ -400,7 +405,6 @@
                 useDefaultBtn.style.display = "none";
             }
 
-            // Mostrar botón borrar solo si el día ya tenía datos guardados
             if (currentAmount > 0) {
                 deleteBtn.style.display = "block";
             } else {
@@ -462,7 +466,6 @@
             }
         }
 
-        // Guardar manual
         document.getElementById('save-btn').addEventListener('click', () => {
             const val = parseFloat(salaryInput.value);
             if (!isNaN(val) && val > 0) {
@@ -475,7 +478,6 @@
             renderCalendar();
         });
 
-        // Botón rápido Borrar Día
         deleteBtn.addEventListener('click', () => {
             delete salariesData[selectedDayKey];
             localStorage.setItem('salariesData', JSON.stringify(salariesData));
@@ -485,7 +487,6 @@
 
         document.getElementById('cancel-btn').addEventListener('click', closeModal);
         
-        // Clic tarifa rápida (auto-guarda y cierra)
         useDefaultBtn.addEventListener('click', () => {
             salariesData[selectedDayKey] = currentTargetRate;
             localStorage.setItem('salariesData', JSON.stringify(salariesData));
@@ -493,7 +494,6 @@
             renderCalendar();
         });
 
-        // Controles de Navegación del Calendario
         document.getElementById('prev-month').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderCalendar();
@@ -511,7 +511,6 @@
 
         document.getElementById('share-report-btn').addEventListener('click', shareMonthlyReport);
 
-        // Configuración de Múltiples Tarifas Habituales
         document.getElementById('config-default-btn').addEventListener('click', () => {
             const currentWeek = parseFloat(weekdaySalary) > 0 ? weekdaySalary : "";
             const currentWeekend = parseFloat(weekendSalary) > 0 ? weekendSalary : "";
@@ -542,7 +541,6 @@
             }
         });
 
-        // Exportar Copia de Seguridad
         document.getElementById('export-btn').addEventListener('click', () => {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(salariesData));
             const downloadAnchor = document.createElement('a');
@@ -553,7 +551,6 @@
             downloadAnchor.remove();
         });
 
-        // Importar Copia de Seguridad
         const fileInput = document.getElementById('file-input');
         document.getElementById('import-btn').addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
