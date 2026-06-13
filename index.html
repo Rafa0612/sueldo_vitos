@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Sueldo Diario</title>
     
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 13h-2v2H9v-2H7v-2h2v-2H7V9h2V7h2v2h2v2h-2v2h2v2z'/></svg>%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
     
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2371/2371914.png">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 13h-2v2H9v-2H7v-2h2v-2H7V9h2V7h2v2h2v2h-2v2h2v2z'/></svg>">
     <meta name="theme-color" content="#2563eb">
 
     <style>
@@ -18,6 +18,7 @@
             --primary: #3b82f6;
             --accent: #10b981;
             --border: #334155;
+            --worked-bg: #064e3b; /* Fondo verde oscuro para días trabajados */
         }
 
         * {
@@ -126,6 +127,13 @@
             text-align: right;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        /* Resaltado de días trabajados */
+        .day-cell.worked {
+            background: var(--worked-bg);
+            border-color: var(--accent);
         }
 
         .day-cell.today {
@@ -247,6 +255,7 @@
         }
 
         #cancel-btn { background: #475569; color: white; }
+        #delete-btn { background: #b91c1c; color: white; display: none; } /* Botón borrar dinámico */
         #save-btn { background: var(--primary); color: white; }
         
         #file-input { display: none; }
@@ -294,6 +303,7 @@
             <button id="use-default-btn" class="default-salary-btn">⚡ Usar tarifa habitual</button>
             <div class="modal-actions">
                 <button id="cancel-btn">Cancelar</button>
+                <button id="delete-btn">Borrar</button>
                 <button id="save-btn">Guardar</button>
             </div>
         </div>
@@ -318,6 +328,7 @@
         const salaryInput = document.getElementById('salary-input');
         const modalDateTitle = document.getElementById('modal-date-title');
         const useDefaultBtn = document.getElementById('use-default-btn');
+        const deleteBtn = document.getElementById('delete-btn');
 
         function renderCalendar() {
             calendarDaysContainer.innerHTML = '';
@@ -347,6 +358,11 @@
                 const amount = salariesData[dateKey] ? parseFloat(salariesData[dateKey]) : 0;
                 monthlyTotal += amount;
 
+                // Si tiene importe guardado, añadimos la clase visual worked
+                if (amount > 0) {
+                    dayCell.classList.add('worked');
+                }
+
                 const today = new Date();
                 if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
                     dayCell.classList.add('today');
@@ -372,7 +388,8 @@
             
             salaryInput.setAttribute('readonly', 'true');
             
-            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6);
+            // Lógica corregida: Solo Viernes (5) y Sábado (6) son fin de semana. Domingo (0) vuelve a ser de diario.
+            const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
             currentTargetRate = isWeekend ? parseFloat(weekendSalary) : parseFloat(weekdaySalary);
             const rateLabel = isWeekend ? "Finde" : "Semana";
 
@@ -381,6 +398,13 @@
                 useDefaultBtn.textContent = `⚡ Tarifa ${rateLabel} (${currentTargetRate.toFixed(2)}€)`;
             } else {
                 useDefaultBtn.style.display = "none";
+            }
+
+            // Mostrar botón borrar solo si el día ya tenía datos guardados
+            if (currentAmount > 0) {
+                deleteBtn.style.display = "block";
+            } else {
+                deleteBtn.style.display = "none";
             }
 
             salaryModal.classList.remove('hidden');
@@ -438,7 +462,7 @@
             }
         }
 
-        // Guardado manual con el botón "Guardar"
+        // Guardar manual
         document.getElementById('save-btn').addEventListener('click', () => {
             const val = parseFloat(salaryInput.value);
             if (!isNaN(val) && val > 0) {
@@ -451,9 +475,17 @@
             renderCalendar();
         });
 
+        // Botón rápido Borrar Día
+        deleteBtn.addEventListener('click', () => {
+            delete salariesData[selectedDayKey];
+            localStorage.setItem('salariesData', JSON.stringify(salariesData));
+            closeModal();
+            renderCalendar();
+        });
+
         document.getElementById('cancel-btn').addEventListener('click', closeModal);
         
-        // ¡Mejora definitiva! Pulsar la tarifa rápida guarda y cierra al instante
+        // Clic tarifa rápida (auto-guarda y cierra)
         useDefaultBtn.addEventListener('click', () => {
             salariesData[selectedDayKey] = currentTargetRate;
             localStorage.setItem('salariesData', JSON.stringify(salariesData));
@@ -484,7 +516,7 @@
             const currentWeek = parseFloat(weekdaySalary) > 0 ? weekdaySalary : "";
             const currentWeekend = parseFloat(weekendSalary) > 0 ? weekendSalary : "";
             
-            const resWeek = prompt("Tarifa habitual DE DIARIO (Lun-Jue):", currentWeek);
+            const resWeek = prompt("Tarifa habitual DE DIARIO (Dom-Jue):", currentWeek);
             if (resWeek !== null) {
                 const valWeek = parseFloat(resWeek);
                 if (!isNaN(valWeek) && valWeek > 0) {
@@ -495,7 +527,7 @@
                     localStorage.removeItem('weekdaySalary');
                 }
 
-                const resWeekend = prompt("Tarifa habitual FIN DE SEMANA (Vie-Dom):", currentWeekend);
+                const resWeekend = prompt("Tarifa habitual FIN DE SEMANA (Vie-Sáb):", currentWeekend);
                 if (resWeekend !== null) {
                     const valWeekend = parseFloat(resWeekend);
                     if (!isNaN(valWeekend) && valWeekend > 0) {
