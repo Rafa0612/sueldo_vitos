@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Sueldo Diario</title>
+    
+    <!-- Manifiesto de la PWA unificado -->
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
+    
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2371/2371914.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --primary: #3b82f6;
+            --accent: #10b981;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-color);
+            padding: 16px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        header button {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-color);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .calendar-grid-header, .calendar-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-grid-header {
+            text-align: center;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .day-cell {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .day-cell:active {
+            transform: scale(0.95);
+        }
+
+        .day-cell.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+
+        .day-cell .day-number {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .day-cell .day-amount {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .day-cell.today {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .total-container {
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #total-salary {
+            color: var(--accent);
+        }
+
+        .share-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .share-btn:active {
+            background: #1d4ed8;
+        }
+
+        /* Estilos del Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+        }
+
+        .modal.hidden { display: none; }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 320px;
+            border: 1px solid var(--border);
+        }
+
+        .modal-content h3 { margin-bottom: 16px; }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #cancel-btn { background: #475569; color: white; }
+        #save-btn { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <button id="prev-month">◀</button>
+            <h1 id="month-year-title">Mes Año</h1>
+            <button id="next-month">▶</button>
+        </header>
+
+        <main>
+            <div class="calendar-grid-header">
+                <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+            </div>
+            <div id="calendar-days" class="calendar-days-grid"></div>
+        </main>
+
+        <footer>
+            <div class="total-container">
+                <span>Total Acumulado:</span>
+                <span id="total-salary">0.00 €</span>
+            </div>
+            <button id="share-report-btn" class="share-btn">
+                <span>📤</span> Enviar Resumen del Mes
+            </button>
+        </footer>
+    </div>
+
+    <!-- Modal para añadir sueldo -->
+    <div id="salary-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="modal-date-title">Día X</h3>
+            <input type="number" id="salary-input" step="0.01" placeholder="0.00" inputmode="decimal">
+            <div class="modal-actions">
+                <button id="cancel-btn">Cancelar</button>
+                <button id="save-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let selectedDayKey = null;
+        let salariesData = JSON.parse(localStorage.getItem('salariesData')) || {};
+
+        const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        const monthYearTitle = document.getElementById('month-year-title');
+        const calendarDaysContainer = document.getElementById('calendar-days');
+        const totalSalaryText = document.getElementById('total-salary');
+        const salaryModal = document.getElementById('salary-modal');
+        const salaryInput = document.getElementById('salary-input');
+        const modalDateTitle = document.getElementById('modal-date-title');
+
+        function renderCalendar() {
+            calendarDaysContainer.innerHTML = '';
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            monthYearTitle.textContent = `${months[month]} ${year}`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            
+            let startDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+            for (let i = 0; i < startDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('day-cell', 'empty');
+                calendarDaysContainer.appendChild(emptyCell);
+            }
+
+            let monthlyTotal = 0;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.classList.add('day-cell');
+                
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const amount = salariesData[dateKey] ? parseFloat(salariesData[dateKey]) : 0;
+                monthlyTotal += amount;
+
+                const today = new Date();
+                if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    dayCell.classList.add('today');
+                }
+
+                dayCell.innerHTML = `
+                    <span class="day-number">${day}</span>
+                    <span class="day-amount">${amount > 0 ? amount.toFixed(2) + '€' : ''}</span>
+                `;
+
+                dayCell.addEventListener('click', () => openModal(dateKey, day, amount));
+                calendarDaysContainer.appendChild(dayCell);
+            }
+
+            totalSalaryText.textContent = `${monthlyTotal.toFixed(2)} €`;
+        }
+
+        function openModal(dateKey, day, currentAmount) {
+            selectedDayKey = dateKey;
+            modalDateTitle.textContent = `Día ${day} de ${months[currentDate.getMonth()]}`;
+            salaryInput.value = currentAmount > 0 ? currentAmount : '';
+            salaryModal.classList.remove('hidden');
+            setTimeout(() => salaryInput.focus(), 150);
+        }
+
+        function closeModal() {
+            salaryModal.classList.add('hidden');
+            salaryInput.value = '';
+            selectedDayKey = null;
+        }
+
+        // Función para compilar el texto resumen y enviarlo al jefe
+        function shareMonthlyReport() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            
+            let reportText = `📋 *RESUMEN DE SUELDO - ${months[month].toUpperCase()} ${year}*\n\n`;
+            let monthlyTotal = 0;
+            let hasData = false;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                if (salariesData[dateKey]) {
+                    const amount = parseFloat(salariesData[dateKey]);
+                    reportText += `🔹 Día ${String(day).padStart(2, '0')}: ${amount.toFixed(2)} €\n`;
+                    monthlyTotal += amount;
+                    hasData = true;
+                }
+            }
+
+            if (!hasData) {
+                alert("No hay ningún dato apuntado en este mes todavía.");
+                return;
+            }
+
+            reportText += `\n-------------------------\n`;
+            reportText += `💰 *TOTAL ACUMULADO:* ${monthlyTotal.toFixed(2)} €`;
+
+            // Utiliza la API nativa del móvil para compartir el texto de forma directa
+            if (navigator.share) {
+                navigator.share({
+                    title: `Resumen de Sueldo - ${months[month]}`,
+                    text: reportText
+                }).catch(err => console.log("Error al compartir:", err));
+            } else {
+                // Copiado de seguridad en portapapeles si abres desde PC
+                navigator.clipboard.writeText(reportText);
+                alert("Resumen copiado al portapapeles. ¡Ya puedes pegarlo en tu chat!");
+            }
+        }
+
+        document.getElementById('save-btn').addEventListener('click', () => {
+            const val = parseFloat(salaryInput.value);
+            if (!isNaN(val) && val > 0) {
+                salariesData[selectedDayKey] = val;
+            } else {
+                delete salariesData[selectedDayKey];
+            }
+            localStorage.setItem('salariesData', JSON.stringify(salariesData));
+            closeModal();
+            renderCalendar();
+        });
+
+        document.getElementById('cancel-btn').addEventListener('click', closeModal);
+        document.getElementById('share-report-btn').addEventListener('click', shareMonthlyReport);
+
+        document.getElementById('prev-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
+                    self.addEventListener('fetch', function(event) {});
+                `));
+            });
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
