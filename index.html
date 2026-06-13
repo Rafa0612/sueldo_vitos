@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Sueldo Diario</title>
     
+    <!-- Manifiesto de la PWA unificado -->
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
     
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2371/2371914.png">
@@ -255,9 +256,10 @@
             <button id="next-month">▶</button>
         </header>
 
+        <!-- Barra de herramientas superior -->
         <div class="quick-actions">
             <button id="today-btn">📅 Ir a Hoy</button>
-            <button id="config-default-btn">⚙️ Fijar Tarifa</button>
+            <button id="config-default-btn">⚙️ Tarifas</button>
             <button id="export-btn">💾 Copia</button>
             <button id="import-btn">📥 Importar</button>
             <input type="file" id="file-input" accept=".json">
@@ -281,6 +283,7 @@
         </footer>
     </div>
 
+    <!-- Modal para añadir sueldo -->
     <div id="salary-modal" class="modal hidden">
         <div class="modal-content">
             <h3 id="modal-date-title">Día X</h3>
@@ -296,8 +299,13 @@
     <script>
         let currentDate = new Date();
         let selectedDayKey = null;
+        let currentTargetRate = 0; // Almacenará la tarifa que corresponda al día seleccionado
+        
         let salariesData = JSON.parse(localStorage.getItem('salariesData')) || {};
-        let defaultSalary = localStorage.getItem('defaultSalary') || 0;
+        
+        // Carga de las dos tarifas diferenciadas
+        let weekdaySalary = localStorage.getItem('weekdaySalary') || 0;
+        let weekendSalary = localStorage.getItem('weekendSalary') || 0;
 
         const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -347,22 +355,29 @@
                     <span class="day-amount">${amount > 0 ? amount.toFixed(2) + '€' : ''}</span>
                 `;
 
-                dayCell.addEventListener('click', () => openModal(dateKey, day, amount));
+                // Pasamos también el día de la semana al abrir el modal para saber si es finde
+                const dayOfWeek = new Date(year, month, day).getDay(); // 0 = Domingo, 6 = Sábado
+                dayCell.addEventListener('click', () => openModal(dateKey, day, amount, dayOfWeek));
                 calendarDaysContainer.appendChild(dayCell);
             }
 
             totalSalaryText.textContent = `${monthlyTotal.toFixed(2)} €`;
         }
 
-        function openModal(dateKey, day, currentAmount) {
+        function openModal(dateKey, day, currentAmount, dayOfWeek) {
             selectedDayKey = dateKey;
             modalDateTitle.textContent = `Día ${day} de ${months[currentDate.getMonth()]}`;
             salaryInput.value = currentAmount > 0 ? currentAmount : '';
             
-            // Ocultar o mostrar botón de tarifa rápida según si está configurado
-            if (parseFloat(defaultSalary) > 0) {
+            // Determinar si es fin de semana (Sábado = 6, Domingo = 0)
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            currentTargetRate = isWeekend ? parseFloat(weekendSalary) : parseFloat(weekdaySalary);
+            const rateLabel = isWeekend ? "Finde" : "Semana";
+
+            // Mostrar el botón de autocompletado inteligente si la tarifa correspondiente está fijada
+            if (currentTargetRate > 0) {
                 useDefaultBtn.style.display = "block";
-                useDefaultBtn.textContent = `⚡ Usar tarifa habitual (${parseFloat(defaultSalary).toFixed(2)}€)`;
+                useDefaultBtn.textContent = `⚡ Tarifa ${rateLabel} (${currentTargetRate.toFixed(2)}€)`;
             } else {
                 useDefaultBtn.style.display = "none";
             }
@@ -431,7 +446,7 @@
         document.getElementById('cancel-btn').addEventListener('click', closeModal);
         
         useDefaultBtn.addEventListener('click', () => {
-            salaryInput.value = defaultSalary;
+            salaryInput.value = currentTargetRate;
         });
 
         // Controles de Navegación del Calendario
@@ -452,19 +467,36 @@
 
         document.getElementById('share-report-btn').addEventListener('click', shareMonthlyReport);
 
-        // Configuración de Tarifa Habitual
+        // Configuración de Múltiples Tarifas Habituales
         document.getElementById('config-default-btn').addEventListener('click', () => {
-            const currentDef = parseFloat(defaultSalary) > 0 ? parseFloat(defaultSalary) : "";
-            const res = prompt("Introduce tu sueldo por día habitual/por defecto (ej: 45.50):", currentDef);
-            if (res !== null) {
-                const val = parseFloat(res);
-                if (!isNaN(val) && val > 0) {
-                    defaultSalary = val;
-                    localStorage.setItem('defaultSalary', val);
+            const currentWeek = parseFloat(weekdaySalary) > 0 ? weekdaySalary : "";
+            const currentWeekend = parseFloat(weekendSalary) > 0 ? weekendSalary : "";
+            
+            // 1. Preguntar tarifa de diario
+            const resWeek = prompt("Tarifa habitual ENTRE SEMANA (Lun-Vie):", currentWeek);
+            if (resWeek !== null) {
+                const valWeek = parseFloat(resWeek);
+                if (!isNaN(valWeek) && valWeek > 0) {
+                    weekdaySalary = valWeek;
+                    localStorage.setItem('weekdaySalary', valWeek);
                 } else {
-                    defaultSalary = 0;
-                    localStorage.removeItem('defaultSalary');
+                    weekdaySalary = 0;
+                    localStorage.removeItem('weekdaySalary');
                 }
+
+                // 2. Preguntar tarifa de fin de semana
+                const resWeekend = prompt("Tarifa habitual FIN DE SEMANA (Sáb-Dom):", currentWeekend);
+                if (resWeekend !== null) {
+                    const valWeekend = parseFloat(resWeekend);
+                    if (!isNaN(valWeekend) && valWeekend > 0) {
+                        weekendSalary = valWeekend;
+                        localStorage.setItem('weekendSalary', valWeekend);
+                    } else {
+                        weekendSalary = 0;
+                        localStorage.removeItem('weekendSalary');
+                    }
+                }
+                renderCalendar();
             }
         });
 
