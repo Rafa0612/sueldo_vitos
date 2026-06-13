@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control de Sueldo Diario</title>
     
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 13h-2v2H9v-2H7v-2h2v-2H7V9h2V7h2v2h2v2h-2v2h2v2z'/></svg>%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
     
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 13h-2v2H9v-2H7v-2h2v-2H7V9h2V7h2v2h2v2h-2v2h2v2z'/></svg>">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2371/2371914.png">
     <meta name="theme-color" content="#2563eb">
 
     <style>
@@ -83,14 +83,12 @@
             background: #1e293b4d;
         }
 
-        /* Contenedor forzado para aislar el grid de los márgenes laterales externos */
         .calendar-container {
             width: 100%;
             display: flex;
             flex-direction: column;
         }
 
-        /* Rejillas simétricas con justificación forzada al centro exacto */
         .calendar-grid-header, .calendar-days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
