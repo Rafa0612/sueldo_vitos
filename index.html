@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control de Sueldo Diario - Vito's Bar</title>
     
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Vito's%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22uploaded:image_1.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22uploaded:image_1.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Vito's%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22./logo.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22./logo.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
     
-    <link rel="icon" type="image/png" href="uploaded:image_1.png">
+    <link rel="icon" type="image/png" href="./logo.png">
     <meta name="theme-color" content="#2563eb">
 
     <style>
@@ -439,6 +439,7 @@
             selectedDayKey = null;
         }
 
+        // Compartir en formato texto formateado para Vito's
         function shareMonthlyReport() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
