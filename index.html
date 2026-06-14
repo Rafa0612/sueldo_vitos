@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Control de Sueldo Diario</title>
+    <title>Control de Sueldo Diario - Vito's Bar</title>
     
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Sueldo%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2371/2371914.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Control%20de%20Sueldo%20Diario%22,%22short_name%22:%22Vito's%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%232563eb%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22uploaded:image_1.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22uploaded:image_1.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
     
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2371/2371914.png">
+    <link rel="icon" type="image/png" href="uploaded:image_1.png">
     <meta name="theme-color" content="#2563eb">
 
     <style>
@@ -305,7 +305,7 @@
 
         <footer>
             <div class="total-container">
-                <span>Total Acumulado:</span>
+                <span>Total Acumulado Vito's:</span>
                 <span id="total-salary">0.00 €</span>
             </div>
             <button id="share-report-btn" class="share-btn">
@@ -464,7 +464,7 @@
             }
 
             reportText += `\n-------------------------\n`;
-            reportText += `💰 *TOTAL ACUMULADO:* ${monthlyTotal.toFixed(2)} €`;
+            reportText += `💰 *TOTAL ACUMULADO VITO'S:* ${monthlyTotal.toFixed(2)} €`;
 
             if (navigator.share) {
                 navigator.share({
@@ -556,7 +556,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(salariesData));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `copia-sueldos-${new Date().toISOString().slice(0,10)}.json`);
+            downloadAnchor.setAttribute("download", `copia-sueldos-vitos-${new Date().toISOString().slice(0,10)}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -575,7 +575,7 @@
                         salariesData = { ...salariesData, ...parsed };
                         localStorage.setItem('salariesData', JSON.stringify(salariesData));
                         renderCalendar();
-                        alert("¡Datos importados con éxito!");
+                        alert("¡Datos importados con éxito para Vito's Bar!");
                     }
                 } catch(err) {
                     alert("El archivo no es válido.");
