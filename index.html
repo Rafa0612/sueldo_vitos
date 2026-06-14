@@ -29,9 +29,14 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
+        html, body {
             background-color: var(--bg-color);
             color: var(--text-color);
+            width: 100%;
+            overflow-x: hidden; /* Bloquea por completo cualquier scroll horizontal rebelde */
+        }
+
+        body {
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -58,7 +63,7 @@
             width: 100%;
         }
 
-        header button, .quick-actions button {
+        header button {
             background: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text-color);
@@ -68,34 +73,45 @@
             font-size: 1rem;
         }
 
+        /* MEJORA CLAVE: Los botones ahora tienen su propia fila flexible con scroll si la pantalla es estrecha */
         .quick-actions {
             display: flex;
-            justify-content: space-between;
             gap: 8px;
             margin-bottom: 16px;
             width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px; /* Pequeño espacio para que el scroll no tape el diseño */
         }
 
+        /* Evita que los botones se encojan de forma fea */
         .quick-actions button {
-            flex: 1;
+            flex: 0 0 auto;
             font-size: 0.85rem;
-            padding: 8px;
+            padding: 8px 12px;
             background: #1e293b4d;
+            border: 1px solid var(--border);
+            color: var(--text-color);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Oculta la barra de scroll visual de los botones en la mayoría de móviles para mantener la estética */
+        .quick-actions::-webkit-scrollbar {
+            display: none;
         }
 
         .calendar-container {
             width: 100%;
-            display: flex;
-            flex-direction: column;
         }
 
+        /* MEJORA CLAVE: repeat(7, minmax(0, 1fr)) obliga a las columnas a encajar exactamente en el ancho disponible */
         .calendar-grid-header, .calendar-days-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 6px;
             width: 100%;
-            justify-content: space-between;
-            justify-items: stretch;
         }
 
         .calendar-grid-header {
@@ -114,10 +130,11 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 6px;
+            padding: 4px; /* Un pelín menos de padding para asegurar que el texto del euro quepa en pantallas mini */
             cursor: pointer;
             transition: transform 0.1s;
             width: 100%;
+            min-width: 0; /* Permite que el contenido interno de la celda colapse correctamente si es necesario */
         }
 
         .day-cell:active {
@@ -131,17 +148,18 @@
         }
 
         .day-cell .day-number {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: bold;
         }
 
         .day-cell .day-amount {
-            font-size: 0.75rem;
+            font-size: 0.65rem; /* Ajustado para garantizar visualización completa en pantallas estrechas */
             color: var(--accent);
             text-align: right;
             overflow: hidden;
             text-overflow: ellipsis;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .day-cell.worked {
@@ -355,12 +373,14 @@
 
             monthYearTitle.textContent = `${months[month]} ${year}`;
 
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const totalDays = new Date(year, month + 1, 0).getDate();
-            
-            let startDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            // Cálculo absoluto de desfase forzando inicio el Lunes
+            const firstDayDate = new Date(year, month, 1);
+            const rawDayIndex = firstDayDate.getDay(); 
+            let startDayDesfase = rawDayIndex === 0 ? 6 : rawDayIndex - 1;
 
-            for (let i = 0; i < startDay; i++) {
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < startDayDesfase; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.classList.add('day-cell', 'empty');
                 calendarDaysContainer.appendChild(emptyCell);
@@ -439,7 +459,6 @@
             selectedDayKey = null;
         }
 
-        // Compartir en formato texto formateado para Vito's
         function shareMonthlyReport() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
