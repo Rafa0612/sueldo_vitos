@@ -19,6 +19,7 @@
             --accent: #10b981;
             --border: #334155;
             --worked-bg: #064e3b;
+            --yearly-bg: #1e293b80;
         }
 
         * {
@@ -33,7 +34,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             width: 100%;
-            overflow-x: hidden; /* Bloquea por completo cualquier scroll horizontal rebelde */
+            overflow-x: hidden;
         }
 
         body {
@@ -52,7 +53,7 @@
             display: flex;
             flex-direction: column;
             background: var(--bg-color);
-            padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+            padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
         }
 
         header {
@@ -73,7 +74,6 @@
             font-size: 1rem;
         }
 
-        /* MEJORA CLAVE: Los botones ahora tienen su propia fila flexible con scroll si la pantalla es estrecha */
         .quick-actions {
             display: flex;
             gap: 8px;
@@ -82,10 +82,9 @@
             overflow-x: auto;
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 4px; /* Pequeño espacio para que el scroll no tape el diseño */
+            padding-bottom: 4px;
         }
 
-        /* Evita que los botones se encojan de forma fea */
         .quick-actions button {
             flex: 0 0 auto;
             font-size: 0.85rem;
@@ -97,7 +96,6 @@
             cursor: pointer;
         }
 
-        /* Oculta la barra de scroll visual de los botones en la mayoría de móviles para mantener la estética */
         .quick-actions::-webkit-scrollbar {
             display: none;
         }
@@ -106,7 +104,6 @@
             width: 100%;
         }
 
-        /* MEJORA CLAVE: repeat(7, minmax(0, 1fr)) obliga a las columnas a encajar exactamente en el ancho disponible */
         .calendar-grid-header, .calendar-days-grid {
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -130,11 +127,11 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 4px; /* Un pelín menos de padding para asegurar que el texto del euro quepa en pantallas mini */
+            padding: 4px;
             cursor: pointer;
             transition: transform 0.1s;
             width: 100%;
-            min-width: 0; /* Permite que el contenido interno de la celda colapse correctamente si es necesario */
+            min-width: 0;
         }
 
         .day-cell:active {
@@ -153,7 +150,7 @@
         }
 
         .day-cell .day-amount {
-            font-size: 0.65rem; /* Ajustado para garantizar visualización completa en pantallas estrechas */
+            font-size: 0.65rem;
             color: var(--accent);
             text-align: right;
             overflow: hidden;
@@ -174,28 +171,47 @@
 
         footer {
             margin-top: auto;
-            padding-top: 24px;
+            padding-top: 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             width: 100%;
         }
 
         .total-container {
             background: var(--card-bg);
             border: 2px solid var(--primary);
-            padding: 16px;
+            padding: 14px 16px;
             border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: bold;
+            width: 100%;
+        }
+
+        /* Nueva tarjeta para el total anual con un estilo más discreto */
+        .total-year-container {
+            background: var(--yearly-bg);
+            border: 1px dashed var(--border);
+            padding: 10px 16px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            color: #94a3b8;
+            font-weight: 600;
             width: 100%;
         }
 
         #total-salary {
             color: var(--accent);
+        }
+
+        #total-year-salary {
+            color: #cbd5e1;
         }
 
         .share-btn {
@@ -212,7 +228,7 @@
             align-items: center;
             gap: 8px;
             width: 100%;
-            margin-bottom: 8px;
+            margin-top: 4px;
         }
 
         .share-btn:active {
@@ -323,8 +339,12 @@
 
         <footer>
             <div class="total-container">
-                <span>Total Acumulado Vito's:</span>
+                <span>Total Mes Vito's:</span>
                 <span id="total-salary">0.00 €</span>
+            </div>
+            <div class="total-year-container">
+                <span id="yearly-title">Acumulado Año (2026):</span>
+                <span id="total-year-salary">0.00 €</span>
             </div>
             <button id="share-report-btn" class="share-btn">
                 <span>📤</span> Enviar Resumen del Mes
@@ -360,11 +380,24 @@
         const monthYearTitle = document.getElementById('month-year-title');
         const calendarDaysContainer = document.getElementById('calendar-days');
         const totalSalaryText = document.getElementById('total-salary');
+        const totalYearSalaryText = document.getElementById('total-year-salary');
+        const yearlyTitleText = document.getElementById('yearly-title');
         const salaryModal = document.getElementById('salary-modal');
         const salaryInput = document.getElementById('salary-input');
         const modalDateTitle = document.getElementById('modal-date-title');
         const useDefaultBtn = document.getElementById('use-default-btn');
         const deleteBtn = document.getElementById('delete-btn');
+
+        function calculateYearlyTotal(currentYear) {
+            let totalYear = 0;
+            for (const key in salariesData) {
+                if (key.startsWith(`${currentYear}-`)) {
+                    totalYear += parseFloat(salariesData[key]) || 0;
+                }
+            }
+            yearlyTitleText.textContent = `Acumulado Año (${currentYear}):`;
+            totalYearSalaryText.textContent = `${totalYear.toFixed(2)} €`;
+        }
 
         function renderCalendar() {
             calendarDaysContainer.innerHTML = '';
@@ -373,7 +406,6 @@
 
             monthYearTitle.textContent = `${months[month]} ${year}`;
 
-            // Cálculo absoluto de desfase forzando inicio el Lunes
             const firstDayDate = new Date(year, month, 1);
             const rawDayIndex = firstDayDate.getDay(); 
             let startDayDesfase = rawDayIndex === 0 ? 6 : rawDayIndex - 1;
@@ -416,6 +448,9 @@
             }
 
             totalSalaryText.textContent = `${monthlyTotal.toFixed(2)} €`;
+            
+            // Calculamos el total de todo el año seleccionado actual
+            calculateYearlyTotal(year);
         }
 
         function openModal(dateKey, day, currentAmount, dayOfWeek) {
